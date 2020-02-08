@@ -2,15 +2,22 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"log"
+	loadbalancer "github.com/jscode017/go_simple_load_balancer"
+	//"log"
 )
 
 func main() {
+	r1 := gin.Default()
+	r1.GET("/:shorten_url", Redirect)
+	r1.POST("/delete", DealWithDeleteUrlRequest)
+	r1.POST("/add", DealWithAddUrlRequest)
+	go r1.Run(":8087")
+	r2 := gin.Default()
+	r2.GET("/:shorten_url", Redirect)
+	r2.POST("/delete", DealWithDeleteUrlRequest)
+	r2.POST("/add", DealWithAddUrlRequest)
+	go r1.Run(":8088")
 
-	log.Println(GenerateKey("www"))
-	r := gin.Default()
-	r.GET("/:shorten_url", Redirect)
-	r.POST("/delete", DealWithDeleteUrlRequest)
-	r.POST("/add", DealWithAddUrlRequest)
-	r.Run(":8088")
+	lb := loadbalancer.NewLoadBalancer([]string{"localhost:8087", "localhost:8088"}, "localhost:8085", 10, 2)
+	lb.Run()
 }
