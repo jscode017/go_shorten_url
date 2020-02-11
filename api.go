@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
+	KGS "github.com/jscode017/go_key_generator_service"
 	"log"
 	"net/http"
-	"strconv"
+	//"strconv"
 	"time"
 )
 
@@ -71,13 +72,13 @@ func DealWithDeleteUrlRequest(c *gin.Context) {
 
 }
 func AddUrl(urlData UrlData) (string, error) {
-	shortenUrl := GenerateKey(urlData.OriginalUrl)
+	//shortenUrl := GenerateKey(urlData.OriginalUrl)
 	conn, err := NewRedisConn()
 	if err != nil {
 		return "", err
 	}
 
-	exist, err := CheckKeyExist(conn, shortenUrl)
+	/*exist, err := CheckKeyExist(conn, shortenUrl)
 	if err != nil {
 		return "", err
 	}
@@ -93,12 +94,16 @@ func AddUrl(urlData UrlData) (string, error) {
 		if exist != 1 {
 			shortenUrl = newShortenUrl
 		}
+	}*/
+	shortenUrl, err := KGS.GetKeyFromRedis(conn) //since redis do not support concurrent operation, so no concurrency problem to worry, no lock needed
+	if err != nil {
+		return "", err
 	}
 
 	urlData.ShortenUrl = shortenUrl
 	urlData.CreationTime = ConvertTimeToStr(time.Now())
 
-	err = AddUrlToDb(conn, urlData) //may still have concurrency problem for conflict shortenUrls, TODO: use a key generation service
+	err = AddUrlToDb(conn, urlData)
 	if err != nil {
 		return "", err
 	}

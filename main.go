@@ -2,11 +2,13 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	KGS "github.com/jscode017/go_key_generator_service"
 	loadbalancer "github.com/jscode017/go_simple_load_balancer"
 	//"log"
 )
 
 func main() {
+	go KGS.GenerateKeysToRedis()
 	r1 := gin.Default()
 	r1.GET("/:shorten_url", Redirect)
 	r1.POST("/delete", DealWithDeleteUrlRequest)
